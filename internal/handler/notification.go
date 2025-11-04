@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
-	"core/app"
 	"core/internal/model"
-	notificationrepo "core/internal/repo"
+	notification "core/internal/repo"
 	outboxrepo "core/internal/repo/notification/outbox_pattern"
 	notifproducer "core/internal/repo/notification/producer"
 
@@ -43,19 +41,6 @@ func CreateNotification(c *fiber.Ctx) error {
 		Metadata: req.Metadata,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), app.DBTimeout)
-	defer cancel()
-
-	// Create notification record first
-	if err := notificationrepo.CreateNotification(ctx, &notif); err != nil {
-		logrus.WithError(err).Error("failed to create notification")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": false, "message": "failed to create notification", "error": err.Error()})
-	}
-
-	// Push to the global channel-based producer (non-blocking). The producer
-	// will handle batching, retries and will persist to outbox only when
-	// internal retries fail. If AddNotification itself fails (e.g. channel
-	// full or producer not running), fall back to persisting an outbox event.
 	prod := notifproducer.GetInstance()
 
 	pd := notifproducer.NotificationData{
@@ -98,4 +83,14 @@ func CreateNotification(c *fiber.Ctx) error {
 
 	// Return created notification
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": true, "data": notif})
+}
+
+func ListNotifications(c *fiber.Ctx) error {
+	var query notification.Query
+	query.Parse(c)
+	themes, total, err := notification.GetAllNotifications(query)
+	if err != nil {
+		return c.JSON(fiber.Map{"status": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"status": true, "data": themes, "total": total})
 }

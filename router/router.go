@@ -34,4 +34,6 @@ func setupRouter(fiber_app *fiber.App) {
 	// Notifications
 	api.Post("/notifications", handler.CreateNotification)
 
+	api.Get("/notifications", handler.ListNotifications)
+
 }

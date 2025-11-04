@@ -48,7 +48,6 @@ func CreateNotificationWithOutbox(ctx context.Context, notif *model.Notification
 	})
 }
 
-// CreateNotification creates only the Notification record (no outbox entry).
 func CreateNotification(ctx context.Context, notif *model.Notification) error {
 	now := time.Now()
 	notif.CreatedAt = &now
@@ -57,4 +56,13 @@ func CreateNotification(ctx context.Context, notif *model.Notification) error {
 		return err
 	}
 	return nil
+}
+
+func GetAllNotifications(query Query) ([]model.Notification, int64, error) {
+	var notifications []model.Notification
+	tx := app.Database.DB.Model(&model.Notification{})
+	var count int64
+	tx.Count(&count)
+	err := tx.Offset(query.Limit * (query.Page - 1)).Limit(query.Limit).Order("created_at desc").Find(&notifications).Error
+	return notifications, count, err
 }

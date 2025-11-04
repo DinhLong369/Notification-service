@@ -311,21 +311,21 @@ func (p *NotificationProducer) AddNotification(notificationData NotificationData
 		return fmt.Errorf("producer is not running")
 	}
 
-	// Set timestamp if not set
+	// Set timestamp nếu chưa có
 	if notificationData.Timestamp.IsZero() {
 		notificationData.Timestamp = time.Now()
 	}
-	// Set ID if not set
+	// Set ID nếu chưa có
 	if notificationData.ID == uuid.Nil {
 		notificationData.ID = uuid.New()
 	}
-	notificationData.RetryCount = 0 // Initial retry count
+	notificationData.RetryCount = 0 // Lần đầu gửi
 
 	select {
-	case p.inputChannel <- notificationData: // Non-blocking send
-		return nil // Success - immediate return
+	case p.inputChannel <- notificationData: // Đưa vào channel (Non-blocking send)
+		return nil // Success - trả về ngay
 	default:
-		// Channel full - system overload
+		// Channel đầy, không thể queue thêm
 		atomic.AddInt64(&p.DroppedCount, 1)
 		return fmt.Errorf("input channel full, request dropped")
 	}
