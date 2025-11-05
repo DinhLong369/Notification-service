@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"core/app"
+	"core/internal/model"
 	"core/internal/repo/notification/producer"
 	"core/lib/kafka"
 
@@ -61,8 +63,28 @@ func (n *NotificationProcessor) Process(ctx context.Context, data producer.Notif
 		// -> Thêm mới vào batch
 		n.batch[key] = data
 	}
+
+	notif := model.Notification{
+		Model: model.Model{
+			ID:        data.ID,
+			CreatedAt: data.CreatedAt,
+			UpdatedAt: data.UpdatedAt,
+		},
+		Title:    data.Title,
+		Content:  data.Content,
+		To:       data.To,
+		From:     data.From,
+		Metadata: data.Metadata,
+		IsRead:   data.IsRead,
+	}
+	db := app.Database.DB.WithContext(ctx)
+	if err := db.Create(&notif).Error; err != nil {
+		logrus.WithError(err).WithField("notification_id", notif.Model.ID).Error("Failed to create notification from Kafka to DB")
+	}
+
 	// Khi batch đầy -> flush ngay
 	if len(n.batch) >= n.batchSize {
+
 		return n.flushBatch()
 	}
 	return nil

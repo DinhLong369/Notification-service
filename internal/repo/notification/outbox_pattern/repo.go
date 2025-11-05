@@ -38,7 +38,7 @@ func (w *OutboxWorker) getPendingOutboxEvents() ([]model.OutboxEvent, error) {
 			// 1. Hoặc là event mới (retry_count = 0)
 			// 2. Hoặc là event đã đến lúc retry (NOW() >= processed_at + backoff_interval)
 			"retry_count = 0 OR NOW() >= DATE_ADD(processed_at, INTERVAL POWER(2, retry_count - 1) * ? SECOND)",
-			w.baseRetryDelay.Seconds(),
+			w.baseRetryDelay,
 		).
 		Order("created_at ASC").
 		Limit(w.batchSize).
@@ -46,4 +46,3 @@ func (w *OutboxWorker) getPendingOutboxEvents() ([]model.OutboxEvent, error) {
 
 	return events, err
 }
-
