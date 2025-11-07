@@ -7,6 +7,7 @@ import (
 
 	"core/app"
 	"core/internal/model"
+	notification "core/internal/repo"
 	"core/internal/repo/notification/producer"
 	"core/lib/fcm"
 	"core/lib/kafka"
@@ -84,12 +85,22 @@ func (n *NotificationProcessor) Process(ctx context.Context, data producer.Notif
 		logrus.WithError(err).WithField("notification_id", notif.Model.ID).Error("Failed to create notification from Kafka to DB")
 	}
 
+	userID, err := notification.ExtractSingleUserID(data.To)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to extract userID from notification.To")
+		return err
+	}
+
+	//  Lấy device tokens theo userID
+	tokens, err := notification.GetDeviceTokensByUserID(userID)
+	if err != nil {
+		logrus.WithError(err).WithField("user_id", userID).
+			Error("Failed to get device tokens for user")
+		return err
+	}
 	// Gửi thông báo về thiết bị qua FCM nếu có token_device
-	if app.FCM.Enabled && data.TokenDevice != "" {
-		err := fcm.FCM.SendNotification(data.TokenDevice, data.Title, data.Content, nil)
-		if err != nil {
-			logrus.WithError(err).WithField("token_device", data.TokenDevice).Error("Failed to send FCM notification")
-		}
+	if app.FCM.Enabled && len(tokens) > 0 {
+		fcm.FCM.SendNotificationMulti(tokens, data.Title, data.Content, nil, nil)
 	}
 
 	// Khi batch đầy -> flush ngay

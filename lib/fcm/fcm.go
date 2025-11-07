@@ -3,6 +3,7 @@ package fcm
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
@@ -49,4 +50,17 @@ func (c *FCMClient) SendNotification(token string, title string, body string, da
 	}
 	_, err := c.client.Send(context.Background(), msg)
 	return err
+}
+
+// SendNotificationMulti gửi thông báo đến nhiều thiết bị, tự động xử lý token hết hạn
+func (c *FCMClient) SendNotificationMulti(tokens []string, title, body string, data map[string]string, expireFunc func(token string)) {
+	for _, token := range tokens {
+		err := c.SendNotification(token, title, body, data)
+		if err != nil && err.Error() != "" && (strings.Contains(err.Error(), "registration token is not registered") ||
+			strings.Contains(err.Error(), "SenderId mismatch")) {
+			if expireFunc != nil {
+				expireFunc(token)
+			}
+		}
+	}
 }

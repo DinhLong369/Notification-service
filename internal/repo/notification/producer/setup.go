@@ -36,7 +36,6 @@ type NotificationData struct {
 	IsRead     bool           `json:"is_read"`
 	Timestamp  time.Time      `json:"timestamp"`
 	RetryCount int            `json:"retry_count"`
-    TokenDevice string         `json:"token_device"`
 }
 
 type NotificationProducer struct {
@@ -70,7 +69,7 @@ type NotificationProducer struct {
 // Set default values cho intervals và status
 func NewNotificationProducer() *NotificationProducer {
 	return &NotificationProducer{
-		Topic:         "notification",                              // Kafka topic
+		Topic:         "notification_service",                      // Kafka topic
 		inputChannel:  make(chan NotificationData, CHANNEL_BUFFER), // Channel với buffer 10k
 		flushChannel:  make(chan map[string]NotificationData, 10),  // Channel nhỏ hơn
 		buffer:        make(map[string]NotificationData),           // Buffer map

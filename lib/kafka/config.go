@@ -11,18 +11,16 @@ import (
 )
 
 type Config struct {
-	Brokers  []string
-	GroupID  string
-	ClientID string
+	Brokers []string
+	GroupID string
 }
 
 var KafkaConfig *Config
 
 func Setup() {
 	KafkaConfig = &Config{
-		Brokers:  strings.Split(app.Config("KAFKA_BROKERS"), ","),
-		GroupID:  app.Config("KAFKA_GROUP_ID"),
-		ClientID: app.Config("KAFKA_CLIENT_ID"),
+		Brokers: strings.Split(app.Config("KAFKA_BROKERS"), ","),
+		GroupID: app.Config("KAFKA_GROUP_ID"),
 	}
 
 	// Tạo topic test kết nối nếu chưa có

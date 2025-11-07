@@ -11,7 +11,7 @@ import (
 	"fmt"
 )
 
-const NOTIFICATION_TOPIC = "notification"
+const NOTIFICATION_TOPIC = "notification_service"
 
 func main() {
 	app.Setup()

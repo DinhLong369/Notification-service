@@ -44,19 +44,18 @@ func CreateNotification(c *fiber.Ctx) error {
 
 	prod := notifproducer.GetInstance()
 
-       pd := notifproducer.NotificationData{
-	       ID:         notif.ID,
-	       CreatedAt:  notif.CreatedAt,
-	       UpdatedAt:  notif.UpdatedAt,
-	       Title:      notif.Title,
-	       Content:    notif.Content,
-	       To:         notif.To,
-	       From:       notif.From,
-	       Metadata:   notif.Metadata,
-	       IsRead:     notif.IsRead,
-	       Timestamp:  time.Now(),
-	       TokenDevice: req.TokenDevice,
-       }
+	pd := notifproducer.NotificationData{
+		ID:        notif.ID,
+		CreatedAt: notif.CreatedAt,
+		UpdatedAt: notif.UpdatedAt,
+		Title:     notif.Title,
+		Content:   notif.Content,
+		To:        notif.To,
+		From:      notif.From,
+		Metadata:  notif.Metadata,
+		IsRead:    notif.IsRead,
+		Timestamp: time.Now(),
+	}
 
 	if err := prod.AddNotification(pd); err != nil {
 		logrus.WithError(err).WithField("notification_id", notif.ID).Warn("producer AddNotification failed, falling back to outbox")

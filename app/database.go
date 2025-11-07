@@ -96,6 +96,7 @@ func (dbConf *DatabaseConfig) Setup() {
 	models := []interface{}{
 		&model.Notification{},
 		&model.OutboxEvent{},
+		&model.DeviceToken{},
 	}
 
 	for _, m := range models {
