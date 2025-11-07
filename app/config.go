@@ -20,12 +20,18 @@ type (
 		Brokers []string
 		GroupID string
 	}
+
+	FCMConfig struct {
+		CredentialsPath string
+		Enabled         bool
+	}
 )
 
 var (
 	Logging  *LoggingConfig
 	Database *DatabaseConfig
 	Kafka    *KafkaConfig
+	FCM      *FCMConfig
 )
 
 func Setup() {
@@ -55,6 +61,12 @@ func Setup() {
 
 	Database = &Http.Database
 	Logging = &Http.Logging
+
+	// FCM Configuration
+	FCM = &FCMConfig{
+		CredentialsPath: os.Getenv("FCM_CREDENTIALS_PATH"),
+		Enabled:         os.Getenv("FCM_ENABLED") == "true",
+	}
 }
 
 func Config(key string) string {

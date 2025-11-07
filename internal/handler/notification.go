@@ -15,11 +15,12 @@ import (
 )
 
 type CreateNotificationRequest struct {
-	Title    string         `json:"title"`
-	Content  string         `json:"content,omitempty"`
-	To       datatypes.JSON `json:"to"`
-	From     datatypes.JSON `json:"from"`
-	Metadata datatypes.JSON `json:"metadata"`
+	Title       string         `json:"title"`
+	Content     string         `json:"content,omitempty"`
+	To          datatypes.JSON `json:"to"`
+	From        datatypes.JSON `json:"from"`
+	Metadata    datatypes.JSON `json:"metadata"`
+	TokenDevice string         `json:"token_device"`
 }
 
 // It creates a Notification record and an OutboxEvent in a single DB transaction.
@@ -43,18 +44,19 @@ func CreateNotification(c *fiber.Ctx) error {
 
 	prod := notifproducer.GetInstance()
 
-	pd := notifproducer.NotificationData{
-		ID:        notif.ID,
-		CreatedAt: notif.CreatedAt,
-		UpdatedAt: notif.UpdatedAt,
-		Title:     notif.Title,
-		Content:   notif.Content,
-		To:        notif.To,
-		From:      notif.From,
-		Metadata:  notif.Metadata,
-		IsRead:    notif.IsRead,
-		Timestamp: time.Now(),
-	}
+       pd := notifproducer.NotificationData{
+	       ID:         notif.ID,
+	       CreatedAt:  notif.CreatedAt,
+	       UpdatedAt:  notif.UpdatedAt,
+	       Title:      notif.Title,
+	       Content:    notif.Content,
+	       To:         notif.To,
+	       From:       notif.From,
+	       Metadata:   notif.Metadata,
+	       IsRead:     notif.IsRead,
+	       Timestamp:  time.Now(),
+	       TokenDevice: req.TokenDevice,
+       }
 
 	if err := prod.AddNotification(pd); err != nil {
 		logrus.WithError(err).WithField("notification_id", notif.ID).Warn("producer AddNotification failed, falling back to outbox")

@@ -5,6 +5,7 @@ import (
 	"core/internal/repo/notification/consumer"
 	"core/internal/repo/notification/outbox_pattern"
 	"core/internal/repo/notification/producer"
+	"core/lib/fcm"
 	"core/lib/kafka"
 	"core/router"
 	"fmt"
@@ -14,6 +15,19 @@ const NOTIFICATION_TOPIC = "notification"
 
 func main() {
 	app.Setup()
+
+	// Khởi tạo FCM
+	fmt.Println("*************** SETUP FCM ***************")
+	if app.FCM.Enabled {
+		if err := fcm.Setup(app.FCM.CredentialsPath); err != nil {
+			fmt.Printf("Failed to initialize FCM: %v\n", err)
+		} else {
+			fmt.Println("FCM initialized successfully")
+		}
+	} else {
+		fmt.Println("FCM is disabled")
+	}
+
 	fmt.Println("*************** SETUP KAFKA ***************")
 	kafka.Setup()
 

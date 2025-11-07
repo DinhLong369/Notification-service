@@ -8,6 +8,7 @@ import (
 	"core/app"
 	"core/internal/model"
 	"core/internal/repo/notification/producer"
+	"core/lib/fcm"
 	"core/lib/kafka"
 
 	"github.com/sirupsen/logrus"
@@ -77,9 +78,18 @@ func (n *NotificationProcessor) Process(ctx context.Context, data producer.Notif
 		Metadata: data.Metadata,
 		IsRead:   data.IsRead,
 	}
+
 	db := app.Database.DB.WithContext(ctx)
 	if err := db.Create(&notif).Error; err != nil {
 		logrus.WithError(err).WithField("notification_id", notif.Model.ID).Error("Failed to create notification from Kafka to DB")
+	}
+
+	// Gửi thông báo về thiết bị qua FCM nếu có token_device
+	if app.FCM.Enabled && data.TokenDevice != "" {
+		err := fcm.FCM.SendNotification(data.TokenDevice, data.Title, data.Content, nil)
+		if err != nil {
+			logrus.WithError(err).WithField("token_device", data.TokenDevice).Error("Failed to send FCM notification")
+		}
 	}
 
 	// Khi batch đầy -> flush ngay
