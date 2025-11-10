@@ -37,7 +37,7 @@ func (n *NotificationProcessor) Init() {
 	go func() {
 		worker := kafka.NewWorker[producer.NotificationData](
 			"notification-consumer-group",
-			[]string{"notification"},
+			[]string{"notification_service"},
 			3, // 3 partitions
 			func(ctx context.Context, msg kafka.Message[producer.NotificationData]) error {
 				return n.Process(ctx, msg.Value)

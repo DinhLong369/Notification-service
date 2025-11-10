@@ -83,7 +83,7 @@ func CreateNotification(c *fiber.Ctx) error {
 	}
 
 	// Return created notification
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": true, "data": notif})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": true, "message": "notification created"})
 }
 
 func ListNotifications(c *fiber.Ctx) error {

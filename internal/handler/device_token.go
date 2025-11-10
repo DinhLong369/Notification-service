@@ -25,7 +25,7 @@ func CreateTokenDevice(c *fiber.Ctx) error {
 		System:      input.System,
 	}
 	if err := notification.CreateTokenDevice(device_token); err != nil {
-		return c.JSON(fiber.Map{"status": false, "message": "Can not create token device"})
+		return c.JSON(fiber.Map{"status": false, "message": "Can not create token device", "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"status": true, "message": "Create token device successfully"})
 }
