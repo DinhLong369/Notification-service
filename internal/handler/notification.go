@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"core/internal/model"
@@ -10,17 +11,18 @@ import (
 	notifproducer "core/internal/repo/notification/producer"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/datatypes"
 )
 
 type CreateNotificationRequest struct {
-	Title       string         `json:"title"`
-	Content     string         `json:"content,omitempty"`
-	To          datatypes.JSON `json:"to"`
-	From        datatypes.JSON `json:"from"`
-	Metadata    datatypes.JSON `json:"metadata"`
-	TokenDevice string         `json:"token_device"`
+	Title    string         `json:"title"`
+	Content  string         `json:"content,omitempty"`
+	To       datatypes.JSON `json:"to"`
+	From     datatypes.JSON `json:"from"`
+	Metadata datatypes.JSON `json:"metadata"`
+	System   string         `json:"system"`
 }
 
 // It creates a Notification record and an OutboxEvent in a single DB transaction.
@@ -40,6 +42,7 @@ func CreateNotification(c *fiber.Ctx) error {
 		To:       req.To,
 		From:     req.From,
 		Metadata: req.Metadata,
+		System:   req.System,
 	}
 
 	prod := notifproducer.GetInstance()
@@ -55,6 +58,7 @@ func CreateNotification(c *fiber.Ctx) error {
 		Metadata:  notif.Metadata,
 		IsRead:    notif.IsRead,
 		Timestamp: time.Now(),
+		System:    notif.System,
 	}
 
 	if err := prod.AddNotification(pd); err != nil {
@@ -94,4 +98,25 @@ func ListNotifications(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": false, "error": err.Error()})
 	}
 	return c.JSON(fiber.Map{"status": true, "data": themes, "total": total})
+}
+
+func MarkNotificationAsRead(c *fiber.Ctx) error {
+	notifycationID := c.Query("ids")
+	if notifycationID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": false, "error": "ids query param is required"})
+	}
+	idStrs := strings.Split(notifycationID, ",")
+
+	var ids []uuid.UUID
+	for _, idStr := range idStrs {
+		id, err := uuid.Parse(strings.TrimSpace(idStr))
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"status": false, "error": "invalid UUID in ids query param"})
+		}
+		ids = append(ids, id)
+	}
+	if err := notification.MarkNotificationsAsRead(ids); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"status": false, "error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"status": true, "message": "notifications marked as read"})
 }

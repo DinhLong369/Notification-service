@@ -36,6 +36,7 @@ type NotificationData struct {
 	IsRead     bool           `json:"is_read"`
 	Timestamp  time.Time      `json:"timestamp"`
 	RetryCount int            `json:"retry_count"`
+	System     string         `json:"system"`
 }
 
 type NotificationProducer struct {

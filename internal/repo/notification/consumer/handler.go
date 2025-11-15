@@ -78,6 +78,7 @@ func (n *NotificationProcessor) Process(ctx context.Context, data producer.Notif
 		From:     data.From,
 		Metadata: data.Metadata,
 		IsRead:   data.IsRead,
+		System:   data.System,
 	}
 
 	db := app.Database.DB.WithContext(ctx)
@@ -85,22 +86,23 @@ func (n *NotificationProcessor) Process(ctx context.Context, data producer.Notif
 		logrus.WithError(err).WithField("notification_id", notif.Model.ID).Error("Failed to create notification from Kafka to DB")
 	}
 
-	userID, err := notification.ExtractSingleUserID(data.To)
+	userIDs, err := notification.ExtractUserIDs(data.To)
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to extract userID from notification.To")
+		logrus.WithError(err).Warn("Failed to extract userIDs from notification.To")
 		return err
 	}
 
-	//  Lấy device tokens theo userID
-	tokens, err := notification.GetDeviceTokensByUserID(userID)
-	if err != nil {
-		logrus.WithError(err).WithField("user_id", userID).
-			Error("Failed to get device tokens for user")
-		return err
-	}
-	// Gửi thông báo về thiết bị qua FCM nếu có token_device
-	if app.FCM.Enabled && len(tokens) > 0 {
-		fcm.FCM.SendNotificationMulti(tokens, data.Title, data.Content, nil, nil)
+	for _, userID := range userIDs {
+		//  Lấy device tokens theo userID
+		tokens, err := notification.GetDeviceTokensByUserID(userID)
+		if err != nil {
+			logrus.WithError(err).WithField("user_id", userID).Error("Failed to get device tokens for user")
+			continue // bỏ qua user lỗi, gửi tiếp user khác
+		}
+		// Gửi thông báo về thiết bị qua FCM nếu có token_device
+		if app.FCM.Enabled && len(tokens) > 0 {
+			fcm.FCM.SendNotificationMulti(tokens, data.Title, data.Content, nil, nil)
+		}
 	}
 
 	// Khi batch đầy -> flush ngay

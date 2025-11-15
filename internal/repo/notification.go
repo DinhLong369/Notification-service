@@ -8,6 +8,7 @@ import (
 	"core/app"
 	"core/internal/model"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -62,7 +63,19 @@ func GetAllNotifications(query Query) ([]model.Notification, int64, error) {
 	var notifications []model.Notification
 	tx := app.Database.DB.Model(&model.Notification{})
 	var count int64
+	if query.Id != uuid.Nil {
+		tx = tx.Where("id = ?", query.Id)
+	}
+	if query.System != "" {
+		tx = tx.Where("system = ?", query.System)
+	}
 	tx.Count(&count)
 	err := tx.Offset(query.Limit * (query.Page - 1)).Limit(query.Limit).Order("created_at desc").Find(&notifications).Error
 	return notifications, count, err
+}
+
+func MarkNotificationsAsRead(ids []uuid.UUID) error {
+	return app.Database.DB.Model(&model.Notification{}).Where("id IN ?", ids).Updates(map[string]interface{}{
+		"is_read": true,
+	}).Error
 }

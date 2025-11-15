@@ -3,6 +3,7 @@ package router
 import (
 	mainapp "core/app"
 	handler "core/internal/handler"
+	"core/internal/middleware"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,10 +32,13 @@ func setupRouter(fiber_app *fiber.App) {
 		return c.JSON(fiber.Map{"status": true, "message": "Pong"})
 	})
 
+	api.Use(middleware.APIKeyAuth())
 	// Notifications
 	api.Post("/notifications", handler.CreateNotification)
 
 	api.Get("/notifications", handler.ListNotifications)
 
 	api.Post("/device_token", handler.CreateTokenDevice)
+
+	api.Post("/mark_read", handler.MarkNotificationAsRead)
 }

@@ -27,18 +27,21 @@ func GetDeviceTokensByUserID(userID string) ([]string, error) {
 	return tokens, nil
 }
 
-func ExtractSingleUserID(to datatypes.JSON) (string, error) {
-	var user struct {
+func ExtractUserIDs(to datatypes.JSON) ([]string, error) {
+	var users []struct {
 		ID string `json:"id"`
 	}
 
-	if err := json.Unmarshal(to, &user); err != nil {
-		return "", fmt.Errorf("invalid JSON in 'To': %v", err)
+	if err := json.Unmarshal(to, &users); err != nil {
+		return nil, fmt.Errorf("invalid JSON in 'To': %v", err)
 	}
 
-	if user.ID == "" {
-		return "", fmt.Errorf("missing user ID in 'To'")
+	var userIDs []string
+	for _, user := range users {
+		if user.ID != "" {
+			userIDs = append(userIDs, user.ID)
+		}
 	}
 
-	return user.ID, nil
+	return userIDs, nil
 }

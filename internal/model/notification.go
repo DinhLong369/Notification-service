@@ -13,4 +13,5 @@ type Notification struct {
 	Metadata datatypes.JSON `json:"metadata"`
 	IsRead   bool           `json:"is_read" gorm:"default:false"`
 	Link     string         `json:"link"`
+	System   string         `json:"system"`
 }

@@ -6,9 +6,10 @@ import (
 )
 
 type Query struct {
-	Id    uuid.UUID `query:"id"`
-	Limit int       `query:"limit"`
-	Page  int       `query:"page"`
+	Id     uuid.UUID `query:"id"`
+	Limit  int       `query:"limit"`
+	Page   int       `query:"page"`
+	System string    `query:"system"`
 }
 
 func (query *Query) Parse(c *fiber.Ctx) {
