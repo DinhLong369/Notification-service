@@ -28,20 +28,26 @@ func GetDeviceTokensByUserID(userID string) ([]string, error) {
 }
 
 func ExtractUserIDs(to datatypes.JSON) ([]string, error) {
-	var users []struct {
+	var ids []string
+
+	// Thử parse dạng array trước
+	var arr []struct {
 		ID string `json:"id"`
 	}
-
-	if err := json.Unmarshal(to, &users); err != nil {
-		return nil, fmt.Errorf("invalid JSON in 'To': %v", err)
-	}
-
-	var userIDs []string
-	for _, user := range users {
-		if user.ID != "" {
-			userIDs = append(userIDs, user.ID)
+	if err := json.Unmarshal(to, &arr); err == nil {
+		for _, u := range arr {
+			ids = append(ids, u.ID)
 		}
+		return ids, nil
 	}
 
-	return userIDs, nil
+	// Nếu không phải array, thử parse dạng object
+	var obj struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(to, &obj); err == nil && obj.ID != "" {
+		return []string{obj.ID}, nil
+	}
+
+	return nil, fmt.Errorf("invalid JSON in 'To'")
 }
